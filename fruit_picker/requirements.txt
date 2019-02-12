@@ -1,0 +1,13 @@
+django
+gunicorn
+django-heroku
+requests  
+flask
+h5py
+keras
+numpy
+opencv-python==3.3.0.9
+pandas
+pickleshare
+tensorflow
+werkzeug

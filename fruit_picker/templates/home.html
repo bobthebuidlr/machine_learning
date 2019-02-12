@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+	<!-- <link rel="stylesheet" type="text/css" href="../static/css/styles.css"> -->
+	<link rel="stylesheet" type="text/css" href="../static/css/styles.css">
+</head>
+<body>
+
+	<header>
+		<div class="container">
+		<div id="brandname" style="margin:0 auto;float:none">
+			Welcome to Fruitpicker!
+		</div>
+		<h2>Upload a photo of a banana, apple or orange and I'll predict what it is!</h2>
+	</div>
+	</header>
+
+	<!-- <input type='file' onchange="readURL(this);" /> -->
+	<div class="ml-container">
+		<h1>Upload new File</h1>
+		<form method="POST" enctype=multipart/form-data action="{{ url_for('upload')}}">
+		  <p><input type=file name=file>
+			 <input type=submit value=Upload>
+		</form>
+		{% if prediction %}
+		I predict a: {{ prediction }}
+		{% endif %}
+	</div>
+</body>
+</html>
+
