@@ -64,7 +64,7 @@ for i in range(iterations):
     layer_1_values = list()
     layer_1_values.append(np.zeros(hidden_dim))
 
-    # Moving along the 8 positions of the binary numbers
+    # Moving along the 8 positions of the binary numbers - FOrward propagation
     for position in range(binary_dim):
 
         # Generating the input and output
@@ -86,7 +86,38 @@ for i in range(iterations):
         d[binary_dim - position - 1] = np.round(layer_2[0][0])
 
         # Copy the layer_1 for use in next iteration
+        # TODO deepcopy might not be needed!
         layer_1_values.append(copy.deepcopy(layer_1))
 
     future_layer_1_deltas = np.zeros(hidden_dim)
+    i = 0
+
+    for item in layer_1_values:
+        i += 1
+        print(i)
+
+    # Backpropagation (starting at the last binary position
+    for position in range(binary_dim):
+
+        # Input is the last binary position for both numbers
+        X = np.array([a[position], b[position]])
+
+        # Selecting the current hidden layer activations
+        layer_1 = layer_1_values[-position - 1]
+
+        # Selecting the previous hidden layer activations
+        prev_layer_1 = layer_1_values[-position - 2]
+
+        # Get the errors from the y and output
+        layer_2_deltas = layer_2_deltas[-position - 1]
+
+        # Get the error at the hidden layer by summing the dot product of
+        # future layer 1 with hidden weights and layer 2 errors by layer 1 weights
+        # and multiplying that with the derivative of the layer 1 activations
+        layer_1_deltas = (future_layer_1_deltas.dot(syn_h.T) + layer_2_deltas.dot(syn_1.T)) * sigmoid_derivative(layer_1)
+
+
+
+
+
 
