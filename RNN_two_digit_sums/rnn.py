@@ -1,15 +1,16 @@
 # TODO - FIND THE BUG THAT IS HAMPERING PROPER EXECUTION
 # TODO - UNDERSTAND THE ERROR CALCULATIONS PROPERLY
 
-import copy, numpy as np
+import numpy as np
+from termcolor import colored
 
-np.random.seed(0)
+np.random.seed(3)
 
 
 # Define sigmoid function
 def sigmoid(x):
     output = 1/(1 + np.exp(-x))
-    output
+    return output
 
 
 # Calculate the derivative of sigmoid
@@ -49,10 +50,10 @@ syn_h_update = np.zeros_like(syn_h)
 # Training function
 for i in range(iterations):
     # Create training examples. A, B for input and output C
-    a_int = np.random.randint(largest_number/2)
+    a_int = np.random.randint(largest_number / 2)
     a = binary[a_int]
 
-    b_int = np.random.randint(largest_number/2)
+    b_int = np.random.randint(largest_number / 2)
     b = binary[b_int]
 
     c_int = a_int + b_int
@@ -83,14 +84,14 @@ for i in range(iterations):
         # Error calcs
         layer_2_error = y - layer_2
         layer_2_deltas.append(layer_2_error * sigmoid_derivative(layer_2))
-        overall_error += np.abs(layer_2_error)
+        overall_error += np.abs(layer_2_error[0])
 
         # Construct the binary output per position
         d[binary_dim - position - 1] = np.round(layer_2[0][0])
 
         # Copy the layer_1 for use in next iteration
         # TODO deepcopy might not be needed!
-        layer_1_values.append(copy.deepcopy(layer_1))
+        layer_1_values.append(layer_1)
 
     future_layer_1_delta = np.zeros(hidden_dim)
 
@@ -112,21 +113,21 @@ for i in range(iterations):
         # Get the error at the hidden layer by summing the dot product of
         # future layer 1 with hidden weights and layer 2 errors by layer 1 weights
         # and multiplying that with the derivative of the layer 1 activations
-        layer_1_deltas = (future_layer_1_delta.dot(syn_h.T) + layer_2_delta.dot(syn_1.T)) * sigmoid_derivative(layer_1)
+        layer_1_delta = (future_layer_1_delta.dot(syn_h.T) + layer_2_delta.dot(syn_1.T)) * sigmoid_derivative(layer_1)
 
         # Updating all the weights
-        syn_1_update = np.atleast_2d(layer_1).T.dot(layer_2_delta)
-        syn_0_update = X.T.dot(layer_1_deltas)
-        syn_h_update = np.atleast_2d(prev_layer_1).T.dot(layer_1_deltas)
+        syn_0_update += X.T.dot(layer_1_delta)
+        syn_1_update += np.atleast_2d(layer_1).T.dot(layer_2_delta)
+        syn_h_update += np.atleast_2d(prev_layer_1).T.dot(layer_1_delta)
 
     # Update the weights
-    syn_1 += syn_1_update * alpha
     syn_0 += syn_0_update * alpha
+    syn_1 += syn_1_update * alpha
     syn_h += syn_h_update * alpha
 
     # Empty all the update synapses
-    syn_1_update *= 0
     syn_0_update *= 0
+    syn_1_update *= 0
     syn_h_update *= 0
 
     if i % 1000 == 0:
@@ -135,6 +136,12 @@ for i in range(iterations):
         c = np.packbits(c)
         d = np.packbits(d)
 
-        print("Input was: %s + %s" % (a, b))
-        print("Actual sum is %s" % c)
-        print("Guess was: %s" % d)
+        print("Input was: %s + %s" % (a[0], b[0]))
+        print("Actual sum is %s" % c[0])
+        if c == d:
+            print(colored(("Guess was: %s" % d[0]), 'green'))
+
+        else:
+            print(colored(("Guess was: %s" % d[0]), 'red'))
+
+        print('\n')
