@@ -1,12 +1,15 @@
+# TODO - FIND THE BUG THAT IS HAMPERING PROPER EXECUTION
+# TODO - UNDERSTAND THE ERROR CALCULATIONS PROPERLY
+
 import copy, numpy as np
 
-np.random.seed(3)
+np.random.seed(0)
 
 
 # Define sigmoid function
 def sigmoid(x):
     output = 1/(1 + np.exp(-x))
-    return output
+    output
 
 
 # Calculate the derivative of sigmoid
@@ -30,7 +33,7 @@ alpha = 0.1
 input_dim = 2
 hidden_dim = 16
 output_dim = 1
-iterations = 1
+iterations = 10000
 
 # Initialize the RNN weights for each layer
 syn_0 = 2 * np.random.random((input_dim, hidden_dim)) - 1
@@ -89,18 +92,13 @@ for i in range(iterations):
         # TODO deepcopy might not be needed!
         layer_1_values.append(copy.deepcopy(layer_1))
 
-    future_layer_1_deltas = np.zeros(hidden_dim)
-    i = 0
-
-    for item in layer_1_values:
-        i += 1
-        print(i)
+    future_layer_1_delta = np.zeros(hidden_dim)
 
     # Backpropagation (starting at the last binary position
     for position in range(binary_dim):
 
         # Input is the last binary position for both numbers
-        X = np.array([a[position], b[position]])
+        X = np.array([[a[position], b[position]]])
 
         # Selecting the current hidden layer activations
         layer_1 = layer_1_values[-position - 1]
@@ -109,15 +107,34 @@ for i in range(iterations):
         prev_layer_1 = layer_1_values[-position - 2]
 
         # Get the errors from the y and output
-        layer_2_deltas = layer_2_deltas[-position - 1]
+        layer_2_delta = layer_2_deltas[-position - 1]
 
         # Get the error at the hidden layer by summing the dot product of
         # future layer 1 with hidden weights and layer 2 errors by layer 1 weights
         # and multiplying that with the derivative of the layer 1 activations
-        layer_1_deltas = (future_layer_1_deltas.dot(syn_h.T) + layer_2_deltas.dot(syn_1.T)) * sigmoid_derivative(layer_1)
+        layer_1_deltas = (future_layer_1_delta.dot(syn_h.T) + layer_2_delta.dot(syn_1.T)) * sigmoid_derivative(layer_1)
 
+        # Updating all the weights
+        syn_1_update = np.atleast_2d(layer_1).T.dot(layer_2_delta)
+        syn_0_update = X.T.dot(layer_1_deltas)
+        syn_h_update = np.atleast_2d(prev_layer_1).T.dot(layer_1_deltas)
 
+    # Update the weights
+    syn_1 += syn_1_update * alpha
+    syn_0 += syn_0_update * alpha
+    syn_h += syn_h_update * alpha
 
+    # Empty all the update synapses
+    syn_1_update *= 0
+    syn_0_update *= 0
+    syn_h_update *= 0
 
+    if i % 1000 == 0:
+        a = np.packbits(a)
+        b = np.packbits(b)
+        c = np.packbits(c)
+        d = np.packbits(d)
 
-
+        print("Input was: %s + %s" % (a, b))
+        print("Actual sum is %s" % c)
+        print("Guess was: %s" % d)
