@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 class Model:
@@ -9,61 +10,83 @@ class Model:
     def add_layer(self, nodes):
         biases = np.random.random((nodes, 1))
         if len(self.layers) == 0:
-            weights = 2 * np.random.random((self.input_nodes, nodes)) - 1
+            weights = 2 * np.random.random((nodes, self.input_nodes)) - 1
         elif len(self.layers) > 0:
-            weights = 2 * np.random.random((self.layers[-1].nodes, nodes)) - 1
+            weights = 2 * np.random.random((nodes, self.layers[-1].nodes)) - 1
         else:
             raise AttributeError('There are no layers present.')
 
         self.layers.append(Layer(nodes, weights, biases))
 
+    def train(self, X, y, iterations=50000, alpha=0.1):
+
+        self.learning_rate = alpha
+
+        for i in range(iterations):
+            index = random.randint(0, len(X) - 1)
+            sample_X = X[index]
+            sample_y = y[index]
+            self.feedforward(sample_X)
+            self.backprop(sample_X, sample_y)
+
     def predict(self, X):
 
-        amount_of_layers = len(self.layers)
-
-        for i in range(amount_of_layers):
+        for i in range(len(self.layers)):
             layer = self.layers[i]
             if i == 0:
-                layer.activations = sigmoid(np.dot(X, layer.weights))
-            elif i > 0:
-                layer.activations = sigmoid(layer.biases + np.dot(self.layers[i-1].activations, layer.weights))
+                layer.activations = sigmoid(np.add(np.dot(layer.weights, X), layer.biases))
+            else:
+                layer.activations = sigmoid(np.add(np.dot(layer.weights, self.layers[i - 1].activations), layer.biases))
 
-        return np.round(self.layers[-1].activations)
+        return self.layers[-1].activations
 
-    def train(self, X, y, alpha, iterations):
+    def feedforward(self, X):
 
-        y = np.array([y])
+        for i in range(len(self.layers)):
+            layer = self.layers[i]
+            if i == 0:
+                layer.activations = sigmoid(np.add(np.dot(layer.weights, X), layer.biases))
+            else:
+                layer.activations = sigmoid(np.add(np.dot(layer.weights, self.layers[i - 1].activations), layer.biases))
 
-        for iter in range(iterations):
+    # TODO Write this one as short as possible
+    def backprop(self, X, y):
 
-            amount_of_layers = len(self.layers)
+        for i in range(len(self.layers)):
 
-            for i in range(amount_of_layers):
-                layer = self.layers[i]
-                if i == 0:
-                    layer.activations = sigmoid(np.dot(X, layer.weights))
-                elif i > 0:
-                    layer.activations = sigmoid(layer.biases + np.dot(self.layers[i - 1].activations, layer.weights))
+            layer = self.layers[len(self.layers) - i - 1]
 
-            overall_error = np.subtract(y, self.layers[-1].activations)
-            print('Overall error is ', overall_error)
+            # If its the last layer
+            if i == 0:
+                input = self.layers[len(self.layers) - i - 2].activations
+                layer.error = np.subtract(y, layer.activations)
+                output_derivative = derivative_of_sigmoid(layer.activations)
 
-            for i in range(amount_of_layers):
+                delta_weights = self.learning_rate * layer.error * output_derivative * input.T
+                delta_biases = self.learning_rate * layer.error * output_derivative
 
-                # @TODO This one is fairly tricky
-                layer = self.layers[amount_of_layers - 1 - i]
-                prev_layer = self.layers[amount_of_layers - 2 - i]
+            # If its the first layer
+            elif i == len(self.layers) - 1:
+                input = X
+                next_layer = self.layers[len(self.layers) - i]
+                layer.error = np.dot(next_layer.weights.T, next_layer.error)
+                output_derivative = derivative_of_sigmoid(layer.activations)
 
-                # @TODO The error is not relative
-                deltas = np.multiply(overall_error, derivative_of_sigmoid(layer.activations)) * alpha
+                delta_weights = self.learning_rate * layer.error * output_derivative * input.T
+                delta_biases = self.learning_rate * layer.error * output_derivative
 
-                if i == (amount_of_layers - 1):
-                    update_weights = X.T.dot(deltas)
+            # All the other iterations
+            else:
+                input = self.layers[len(self.layers) - i - 2].activations
+                next_layer = self.layers[len(self.layers) - i]
+                layer.error = np.dot(next_layer.weights.T, next_layer.error)
+                output_derivative = derivative_of_sigmoid(layer.activations)
 
-                else:
-                    update_weights = prev_layer.activations.T.dot(deltas)
+                delta_weights = self.learning_rate * layer.error * output_derivative * input.T
+                delta_biases = self.learning_rate * layer.error * output_derivative
 
-                layer.weights += update_weights
+            layer.weights += delta_weights
+            layer.biases += delta_biases
 
 
 class Layer:
@@ -79,5 +102,5 @@ def sigmoid(x):
 
 
 def derivative_of_sigmoid(x):
-    return x * (1 - x)
-
+    output = x * (1 - x)
+    return output
