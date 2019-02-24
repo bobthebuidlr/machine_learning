@@ -54,37 +54,30 @@ class Model:
 
         for i in range(len(self.layers)):
 
+            # Current layer in scope
             layer = self.layers[len(self.layers) - i - 1]
+
+            # Previous layer activations = input
+            input = self.layers[len(self.layers) - i - 2].activations
 
             # If its the last layer
             if i == 0:
-                input = self.layers[len(self.layers) - i - 2].activations
                 layer.error = np.subtract(y, layer.activations)
-                output_derivative = derivative_of_sigmoid(layer.activations)
-
-                delta_weights = self.learning_rate * layer.error * output_derivative * input.T
-                delta_biases = self.learning_rate * layer.error * output_derivative
 
             # If its the first layer
             elif i == len(self.layers) - 1:
                 input = X
                 next_layer = self.layers[len(self.layers) - i]
                 layer.error = np.dot(next_layer.weights.T, next_layer.error)
-                output_derivative = derivative_of_sigmoid(layer.activations)
-
-                delta_weights = self.learning_rate * layer.error * output_derivative * input.T
-                delta_biases = self.learning_rate * layer.error * output_derivative
 
             # All the other iterations
             else:
-                input = self.layers[len(self.layers) - i - 2].activations
                 next_layer = self.layers[len(self.layers) - i]
                 layer.error = np.dot(next_layer.weights.T, next_layer.error)
-                output_derivative = derivative_of_sigmoid(layer.activations)
 
-                delta_weights = self.learning_rate * layer.error * output_derivative * input.T
-                delta_biases = self.learning_rate * layer.error * output_derivative
-
+            output_derivative = derivative_of_sigmoid(layer.activations)
+            delta_weights = self.learning_rate * layer.error * output_derivative * input.T
+            delta_biases = self.learning_rate * layer.error * output_derivative
             layer.weights += delta_weights
             layer.biases += delta_biases
 
