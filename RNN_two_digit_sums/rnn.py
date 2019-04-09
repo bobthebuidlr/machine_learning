@@ -1,6 +1,3 @@
-# TODO - FIND THE BUG THAT IS HAMPERING PROPER EXECUTION
-# TODO - UNDERSTAND THE ERROR CALCULATIONS PROPERLY
-
 import numpy as np
 from termcolor import colored
 
@@ -34,7 +31,7 @@ alpha = 0.1
 input_dim = 2
 hidden_dim = 16
 output_dim = 1
-iterations = 10000
+iterations = 20000
 
 # Initialize the RNN weights for each layer
 syn_0 = 2 * np.random.random((input_dim, hidden_dim)) - 1
